@@ -14,6 +14,7 @@ You may apply labels to your containers via [compose](https://docs.docker.com/co
  * org.cachet.name
  * org.cachet.description
  * org.cachet.link
+
 all labels are optional but id superceedes the rest.
 
 
