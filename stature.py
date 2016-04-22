@@ -1,19 +1,24 @@
+import sys
 import logging
 
+import baker
 import toml
 from docker import Client
 from cachet import Cachet
 
 
 def main(cli, cach, settings):
-    docker_map = settings['containers']
+    # docker_map = settings['containers']
     cs = cli.containers()
+    if not cs:
+        logging.error("No containers running!")
+        sys.exit(4)
     for container in cs:
         cach_id = None
         name = container['Names'][0][1:]
         labels = container['Labels']
-        if name in docker_map:
-            cach_id = docker_map[name]
+        if name in settings['containers']:
+            cach_id = settings['containers'][name]
 
         elif filter(lambda k: "org.cachet" in k, labels.keys()):
             if "org.cachet.id" in container['Labels']:
@@ -28,7 +33,7 @@ def main(cli, cach, settings):
                 ret = cach.postComponents(status=1, **args) #assume status is fine
                 cach_id = ret.json()['data']['id']
                 logging.info("Got component id: %d", cach_id)
-                docker_map[name] = cach_id
+                settings['containers'][name] = cach_id
         else:
             logging.info("Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
         status = container['Status'].split()[0]
@@ -36,10 +41,17 @@ def main(cli, cach, settings):
             cach.putComponentsByID(cach_id, status=1)
         elif status == "Exited":
             cach.putComponentsByID(cach_id, status=4)
+    return settings
 
-if __name__ == '__main__':
-    settings = toml.load("docker2cachet.toml")
+@baker.command(default=True, shortopts={"conf_file": "f",})
+def run(conf_file="docker2cachet.toml"):
+    settings = toml.load(conf_file)
     logging.basicConfig(level=logging.INFO)
     cli = Client(base_url='unix://var/run/docker.sock')
     cach = Cachet(settings['cachet']['url'], settings['cachet']['api_key'])
-    main(cli, cach, settings)
+    settings = main(cli, cach, settings)
+    with open(conf_file, 'w') as f:
+        toml.dump(settings, f)
+
+if __name__ == '__main__':
+    baker.run()
