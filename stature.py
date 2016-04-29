@@ -30,20 +30,26 @@ def main(cli, cach, settings):
                 if "org.cachet.link" in labels:
                     args["link"] = labels["org.cachet.link"]
                 logging.info("Creating Component: %s", args['name'])
-                ret = cach.postComponents(status=1, **args) #assume status is fine
+                # assume status is fine
+                ret = cach.postComponents(status=1, **args)
+                ret.raise_for_status()
                 cach_id = ret.json()['data']['id']
                 logging.info("Got component id: %d", cach_id)
                 settings['containers'][name] = cach_id
         else:
-            logging.info("Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
+            logging.info(
+                "Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
         status = container['Status'].split()[0]
         if status == "Up":
-            cach.putComponentsByID(cach_id, status=1)
+            ret = cach.putComponentsByID(cach_id, status=1)
+            ret.raise_for_status()
         elif status == "Exited":
-            cach.putComponentsByID(cach_id, status=4)
+            ret = cach.putComponentsByID(cach_id, status=4)
+            ret.raise_for_status()
     return settings
 
-@baker.command(default=True, shortopts={"conf_file": "f",})
+
+@baker.command(default=True, shortopts={"conf_file": "f", })
 def run(conf_file="docker2cachet.toml"):
     settings = toml.load(conf_file)
     logging.basicConfig(level=logging.INFO)
