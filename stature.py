@@ -39,9 +39,12 @@ def main(cli, cach, settings):
         else:
             logging.info(
                 "Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
+            continue
         status = container['Status'].split()[0]
+        logging.debug("Cachet ID: %d",cach_id)
         if status == "Up":
             ret = cach.putComponentsByID(cach_id, status=1)
+            logging.debug(ret.text)
             ret.raise_for_status()
         elif status == "Exited":
             ret = cach.putComponentsByID(cach_id, status=4)
