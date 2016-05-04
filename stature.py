@@ -1,5 +1,6 @@
 import sys
 import logging
+import time
 
 import baker
 import toml
@@ -41,6 +42,7 @@ def main(cli, cach, settings):
                 "Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
             continue
         status = container['Status'].split()[0]
+        time.sleep(2)
         logging.debug("Cachet ID: %d",cach_id)
         if status == "Up":
             ret = cach.putComponentsByID(cach_id, status=1)
