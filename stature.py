@@ -11,10 +11,12 @@ from cachet import Cachet
 def main(cli, cach, settings):
     # docker_map = settings['containers']
     cs = cli.containers()
+    # print(cs)
     if not cs:
         logging.error("No containers running!")
         sys.exit(4)
     for container in cs:
+        # print(container)
         cach_id = None
         name = container['Names'][0][1:]
         labels = container['Labels']
@@ -42,6 +44,7 @@ def main(cli, cach, settings):
                 "Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
             continue
         status = container['Status'].split()[0]
+        # print(status)
         time.sleep(2)
         logging.debug("Cachet ID: %d",cach_id)
         if status == "Up":
