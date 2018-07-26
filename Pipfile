@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+verify_ssl = true
+url = "https://pypi.org/simple"
+
+[requires]
+python_version = "2.7"
+
+[dev-packages]
+
+[packages]
+argparse = "*"
+cachet = "==0.1.0"
+requests = "*"
+six = "*"
+toml = "*"
+Baker = "*"
+docker = "*"
+click = "*"

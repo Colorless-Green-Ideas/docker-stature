@@ -4,13 +4,14 @@ import time
 
 import baker
 import toml
-from docker import Client
+import docker
+
 from cachet import Cachet
 
 
 def main(cli, cach, settings):
     # docker_map = settings['containers']
-    cs = cli.containers()
+    cs = cli.containers.list()
     # print(cs)
     if not cs:
         logging.error("No containers running!")
@@ -18,13 +19,13 @@ def main(cli, cach, settings):
     for container in cs:
         # print(container)
         cach_id = None
-        name = container['Names'][0][1:]
-        labels = container['Labels']
+        name = container.name
+        labels = container.labels
         if name in settings['containers']:
             cach_id = settings['containers'][name]
 
         elif filter(lambda k: "org.cachet" in k, labels.keys()):
-            if "org.cachet.id" in container['Labels']:
+            if "org.cachet.id" in labels:
                 cach_id = labels['org.cachet.id']
             elif "org.cachet.name" in labels:
                 args = {"name": labels["org.cachet.name"]}
@@ -43,15 +44,15 @@ def main(cli, cach, settings):
             logging.info(
                 "Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
             continue
-        status = container['Status'].split()[0]
+        status = container.status
         # print(status)
         time.sleep(2)
         logging.debug("Cachet ID: %d",cach_id)
-        if status == "Up":
+        if status == "up":
             ret = cach.putComponentsByID(cach_id, status=1)
             logging.debug(ret.text)
             ret.raise_for_status()
-        elif status == "Exited":
+        elif status == "exited":
             ret = cach.putComponentsByID(cach_id, status=4)
             ret.raise_for_status()
     return settings
@@ -61,7 +62,7 @@ def main(cli, cach, settings):
 def run(conf_file="docker2cachet.toml"):
     settings = toml.load(conf_file)
     logging.basicConfig(level=logging.INFO)
-    cli = Client(base_url='unix://var/run/docker.sock')
+    cli = docker.from_env()
     cach = Cachet(settings['cachet']['url'], settings['cachet']['api_key'])
     settings = main(cli, cach, settings)
     with open(conf_file, 'w') as f:

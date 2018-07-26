@@ -1,6 +1,7 @@
 # docker-stature
 Docker container metadata as a Cachet component data!
 
+[![Build Status](https://travis-ci.org/Colorless-Green-Ideas/docker-stature.svg?branch=master)](https://travis-ci.org/Colorless-Green-Ideas/docker-stature)
 
 # Configuration via toml (option 1)
 You can manually assign containers by name to a cachet component in the `docker2cachet.toml` file. just make a new entry in the `[containers]` section.

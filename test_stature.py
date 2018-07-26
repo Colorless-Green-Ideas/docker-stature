@@ -1,8 +1,12 @@
 import unittest
 import json
-import mock
 
-from docker import Client
+try:
+    import unittest.mock as mock
+except ImportError:
+    import mock
+
+from docker import APIClient as Client
 from cachet import Cachet
 
 from stature import main
@@ -21,8 +25,8 @@ class TestOneShotMode(unittest.TestCase):
         cachet.putComponentsByID=mock.Mock()
 
         main(cli_mock,cachet,self.settings)
-        cli_mock.containers.assert_called_once()
-        cachet.putComponentsByID.assert_called()
+        cli_mock.containers.assert_called()
+        cachet.putComponentsByID.assert_called_once()
         # cachet_mock.assert_called()
 
     @mock.patch("stature.logging.error")
