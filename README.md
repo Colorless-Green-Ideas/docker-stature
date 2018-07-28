@@ -19,5 +19,6 @@ You may apply labels to your containers via [compose](https://docs.docker.com/co
 all labels are optional but id superceedes the rest.
 
 
-#Connecting to docker over TLS
-This is currently not exposed by the script but support could be added. `main()` takes a `docker.Client` instance that can be created with the [proper connection parameters.](https://docker-py.readthedocs.org/en/latest/tls/)
+# Connecting to docker over TLS
+
+Just install `docker[tls]` and our use of `docker.from_env()` will just work! Thanks docker team for making this way better since v1.
