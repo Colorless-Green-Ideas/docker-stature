@@ -2,9 +2,9 @@ import sys
 import logging
 import time
 
-import baker
 import toml
 import docker
+import click
 
 from cachet import Cachet
 
@@ -54,8 +54,9 @@ def main(cli, cach, settings):
     return settings
 
 
-@baker.command(default=True, shortopts={"conf_file": "f", })
-def run(conf_file="docker2cachet.toml"):
+@click.command()
+@click.option("--conf-file", '-f', default="docker2cachet.toml", type=click.Path(exists=True))
+def run(conf_file):
     settings = toml.load(conf_file)
     logging.basicConfig(level=logging.INFO)
     cli = docker.from_env()
@@ -65,4 +66,4 @@ def run(conf_file="docker2cachet.toml"):
         toml.dump(settings, f)
 
 if __name__ == '__main__':
-    baker.run()
+    run()
