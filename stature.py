@@ -9,6 +9,9 @@ import click
 from cachet import Cachet
 
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
 def main(cli, cach, settings):
     cs = cli.containers.list()
     if not cs:
@@ -54,11 +57,16 @@ def main(cli, cach, settings):
     return settings
 
 
-@click.command()
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--debug', default=False, is_flag=True)
+@click.option('--verbose/--silent', default=True)
 @click.option("--conf-file", '-f', default="docker2cachet.toml", type=click.Path(exists=True))
-def run(conf_file):
+def run(conf_file, verbose, debug):
     settings = toml.load(conf_file)
-    logging.basicConfig(level=logging.INFO)
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
     cli = docker.from_env()
     cach = Cachet(settings['cachet']['url'], settings['cachet']['api_key'])
     settings = main(cli, cach, settings)
