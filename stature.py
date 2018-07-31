@@ -11,12 +11,18 @@ from cachet import Cachet
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
+def is_swarm(cli):
+    "Is swarm mode enabled on this docker engine?"
+    return not cli.swarm.attrs == {}
+
 
 def main(cli, cach, settings):
     cs = cli.containers.list()
     if not cs:
         logging.error("No containers running!")
         sys.exit(4)
+    if 'containers' in settings:
+        logging.error("Write out your toml file! Try an empty containers section.")
     for container in cs:
         cach_id = None
         name = container.name

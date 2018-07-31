@@ -62,3 +62,25 @@ class TestOneShotMode(unittest.TestCase):
 
     def test_tag_annotations(self):
         pass
+
+class IntegrationHCTest(unittest.TestCase):
+    settings = {
+        "cachet": {"api_key": "afancyapikey", "url": "http://localhost/api/v1"},
+        "containers": {}
+    }
+
+    def setUp(self):
+        self.client = docker.from_env()
+
+    def tearDown(self):
+        self.client.close()
+        
+    @mock.patch("cachet.Cachet.postComponents")
+    def test_with_healthceck(self, fake_cachet):
+        labels = {"org.cachet.name": "Python Test Container", "org.cachet.link": "localhost:1337", "org.cachet.description": "This tests the cachet integrations!"}
+        container = self.client.containers.run("python:2", "python -m SimpleHTTPServer 1337", detach=True, healthcheck={"test": ["CMD", "curl", "localhost:1337"]}, labels=labels)
+        main(self.client, fake_cachet, self.settings)
+        print(fake_cachet.calls)
+        container.kill()
+        container.remove()
+
