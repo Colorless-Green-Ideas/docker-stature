@@ -38,9 +38,9 @@ class TestOneShotMode(unittest.TestCase):
     def test_registers_containers(self, cachet_mock):
         # containers_mock.side_effect = self.containerz
         cli_mock = mock.Mock()
-        cli_mock.containers.list.return_value = [container_mock(), container_mock()]
-        cachet = mock.Mock(spec=Cachet)
-        cachet.putComponentsByID = mock.Mock()
+        cli_mock.containers.list.return_value = [container_mock()]
+        cachet = mock.Mock()
+        # cachet.putComponentsByID = mock.Mock()
 
         main(cli_mock, cachet, self.settings)
         # cli_mock.containers.assert_called()
@@ -56,6 +56,14 @@ class TestOneShotMode(unittest.TestCase):
         main(cli_mock, cachet, self.settings)
         patched_exit.assert_called_with(4)
         patched_error.assert_called_with("No containers running!")
+
+    @mock.patch("stature.logging.error")
+    def test_no_containers_section(self, patched_error):
+        cli_mock = mock.MagicMock()
+        cachet_mock = mock.Mock()
+        lsettings = {"cachet": {"api_key": "fjdjkfhsdfh", "url": "http://localhost/api/v1"},}
+        main(cli_mock, cachet_mock, lsettings)
+        patched_error.assert_called_with("Write out your toml file! Try an empty containers section.")
 
     def test_exited_container(self):
         pass

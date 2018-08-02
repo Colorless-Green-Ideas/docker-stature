@@ -16,12 +16,25 @@ def is_swarm(cli):
     return not cli.swarm.attrs == {}
 
 
+def is_healthy(container):
+    container.reload() # causes a new request to daemon
+    try:
+        state = container.attrs['State']['Health']['Status']
+        if state == "healthy":
+            return True
+        elif state == "starting":
+            return False
+        else:
+            logging.error("unknown container state: %s", state)
+    except KeyError:
+        return False
+
 def main(cli, cach, settings):
     cs = cli.containers.list()
     if not cs:
         logging.error("No containers running!")
         sys.exit(4)
-    if 'containers' in settings:
+    if 'containers' not in settings:
         logging.error("Write out your toml file! Try an empty containers section.")
     for container in cs:
         cach_id = None
@@ -51,9 +64,10 @@ def main(cli, cach, settings):
                 "Container: %s not found in your toml file, nor does it have a docker label metadata, see the docs for refrence.", name)
             continue
         status = container.status
-        time.sleep(2)
+        # time.sleep(2)
+        # Why was this here. slowing tests???
         logging.debug("Cachet ID: %d",cach_id)
-        if status == "up":
+        if status == "running":
             ret = cach.putComponentsByID(cach_id, status=1)
             logging.debug(ret.text)
             ret.raise_for_status()
