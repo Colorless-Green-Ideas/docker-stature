@@ -1,6 +1,9 @@
 import unittest
 import json
 import random
+import subprocess
+import logging
+
 try:
     import unittest.mock as mock
 except ImportError:
@@ -11,6 +14,7 @@ import attr
 from cachet import Cachet
 
 from stature import main
+
 
 
 @attr.s
@@ -85,10 +89,34 @@ class IntegrationHCTest(unittest.TestCase):
         
     @mock.patch("cachet.Cachet.postComponents")
     def test_with_healthceck(self, fake_cachet):
-        labels = {"org.cachet.name": "Python Test Container", "org.cachet.link": "localhost:1337", "org.cachet.description": "This tests the cachet integrations!"}
+        labels = {"org.cachet.name": "Python Test Container", "org.cachet.link": "http://localhost:1337/", "org.cachet.description": "This tests the cachet integrations!"}
         container = self.client.containers.run("python:2", "python -m SimpleHTTPServer 1337", detach=True, healthcheck={"test": ["CMD", "curl", "localhost:1337"]}, labels=labels)
         main(self.client, fake_cachet, self.settings)
         print(fake_cachet.calls)
         container.kill()
-        container.remove()
+        container.remove(force=True)
 
+def seed_cachet():
+    subprocess.call(["docker-compose",  "run",  "--rm",  "cachet", "php7", "artisan", "cachet:seed"], cwd="fixtures")
+# https://github.com/CachetHQ/Cachet/blob/b431ee3702831df88a669c1909cba02d863b4cef/app/Console/Commands/DemoSeederCommand.php#L441
+
+class IntegrationCachetTest(unittest.TestCase):
+    def setUp(self):
+        self.settings = {
+            "cachet":{
+                "api_key" : "9yMHsdioQosnyVK4iCVR",
+                "url": "http://localhost:3666/api/v1"
+            },
+            "containers": {}
+        }
+        subprocess.call(["docker-compose", "up", "-d"], cwd="fixtures")
+        seed_cachet()
+        self.client = docker.from_env()
+        self.cachet = Cachet("http://localhost:3666/api/v1", "9yMHsdioQosnyVK4iCVR")
+
+    def tearDown(self):
+        self.client.close()
+        subprocess.call(["docker-compose", "stop"], cwd="fixtures")
+
+    def test_cachet_integration(self):
+        main(self.client, self.cachet, self.settings)
