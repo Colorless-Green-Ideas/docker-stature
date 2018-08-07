@@ -42,7 +42,7 @@ class TestOneShotMode(unittest.TestCase):
     def test_registers_containers(self, cachet_mock):
         # containers_mock.side_effect = self.containerz
         cli_mock = mock.Mock()
-        cli_mock.containers.list.return_value = [container_mock()]
+        cli_mock.containers.list.return_value = [FakeContainer(name="cachetdocker_cachet_1", labels={}, status=u"running")]
         cachet = mock.Mock()
         # cachet.putComponentsByID = mock.Mock()
 
