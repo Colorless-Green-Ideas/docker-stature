@@ -48,7 +48,7 @@ class TestOneShotMode(unittest.TestCase):
 
         main(cli_mock, cachet, self.settings)
         # cli_mock.containers.assert_called()
-        cachet.putComponentsByID.assert_called_once()
+        cachet.putComponentsByID.assert_called_once_with(1, status=1)
         # cachet_mock.assert_called()
 
     @mock.patch("stature.logging.error")
