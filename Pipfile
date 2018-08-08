@@ -9,6 +9,7 @@ python_version = "3.7"
 [dev-packages]
 green = "*"
 mock = "*"
+"backports.shutil-get-terminal-size" = "*"
 
 [packages]
 argparse = "*"
