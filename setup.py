@@ -2,7 +2,7 @@
 
 from setuptools import setup
 setup(name="stature",
-      version="0.2.0a1",
+      version="0.2.0b1",
       scripts=['stature.py'],
       author="Jack Laxson",
       author_email="jackjrabbit@gmail.com",
