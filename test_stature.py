@@ -83,22 +83,25 @@ class IntegrationHCTest(unittest.TestCase):
 
     def setUp(self):
         self.client = docker.from_env()
+        labels = {"org.cachet.name": "Python Test Container", "org.cachet.link": "http://localhost:1337/", "org.cachet.description": "This tests the cachet integrations!"}
+        self.container = self.client.containers.run("python:2", "python -m SimpleHTTPServer 1337", detach=True, healthcheck={"test": ["CMD", "curl", "localhost:1337"]}, labels=labels)
+
 
     def tearDown(self):
         self.client.close()
+        self.container.kill()
+        self.container.remove(force=True)
         
     @mock.patch("cachet.Cachet.postComponents")
     def test_with_healthceck(self, fake_cachet):
-        labels = {"org.cachet.name": "Python Test Container", "org.cachet.link": "http://localhost:1337/", "org.cachet.description": "This tests the cachet integrations!"}
-        container = self.client.containers.run("python:2", "python -m SimpleHTTPServer 1337", detach=True, healthcheck={"test": ["CMD", "curl", "localhost:1337"]}, labels=labels)
         main(self.client, fake_cachet, self.settings)
-        print(fake_cachet.calls)
-        container.kill()
-        container.remove(force=True)
-
+        print(fake_cachet.mock_calls)
+        fake_cachet.postComponents.assert_called_with(description='This tests the cachet integrations!', link='http://localhost:1337/', name='Python Test Container', status=mock.ANY)
+        # One or two???? wtf
+        
 def seed_cachet():
     subprocess.call(["docker-compose",  "run",  "--rm",  "cachet", "php7", "artisan", "cachet:seed"], cwd="fixtures")
-# https://github.com/CachetHQ/Cachet/blob/b431ee3702831df88a669c1909cba02d863b4cef/app/Console/Commands/DemoSeederCommand.php#L441
+    # https://github.com/CachetHQ/Cachet/blob/b431ee3702831df88a669c1909cba02d863b4cef/app/Console/Commands/DemoSeederCommand.php#L441
 
 class IntegrationCachetTest(unittest.TestCase):
     def setUp(self):
@@ -113,10 +116,21 @@ class IntegrationCachetTest(unittest.TestCase):
         seed_cachet()
         self.client = docker.from_env()
         self.cachet = Cachet("http://localhost:3666/api/v1", "9yMHsdioQosnyVK4iCVR")
+        labels = {"org.cachet.name": "Python Test Container", "org.cachet.link": "http://localhost:1337/", "org.cachet.description": "This tests the cachet integrations!"}
+        self.container = self.client.containers.run("python:2", "python -m SimpleHTTPServer 1337", detach=True, healthcheck={"test": ["CMD", "curl", "localhost:1337"]}, labels=labels)
 
     def tearDown(self):
         self.client.close()
         subprocess.call(["docker-compose", "stop"], cwd="fixtures")
-
+        self.container.kill()
+        self.container.remove(force=True)
+        
     def test_cachet_integration(self):
         main(self.client, self.cachet, self.settings)
+        ret = self.cachet.getComponents()
+        comps = ret.json()['data']
+        # print(comps[-1])
+        self.assertEquals('http://localhost:1337/', comps[-1]['link'])
+        self.assertEquals('Python Test Container', comps[-1]['name'])
+        
+        # self.assertIn({'enabled': True, 'status': 1, 'link': , 'deleted_at': None, 'group_id': 0, 'name': 'Python Test Container', 'order': 0, 'created_at': '2018-08-11 10:36:41', 'id': 8, 'description': 'This tests the cachet integrations!', 'tags': [], 'status_name': 'Operational', 'updated_at': '2018-08-11 10:36:41'} , comps)

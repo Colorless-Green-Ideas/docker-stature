@@ -55,8 +55,11 @@ def main(cli, cach, settings):
                 if "org.cachet.link" in labels:
                     args["link"] = labels["org.cachet.link"]
                 logging.info("Creating Component: %s", args['name'])
-                # assume status is fine
-                ret = cach.postComponents(status=1, **args)
+                # Check status then here
+                if is_healthy(container):
+                    ret = cach.postComponents(status=1, **args)
+                else:
+                    ret = cach.postComponents(status=2, **args)
                 # print(ret.json())
                 ret.raise_for_status()
                 cach_id = ret.json()['data']['id']
